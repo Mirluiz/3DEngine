@@ -44,27 +44,60 @@ export default class Canvas extends CanvasHelpers {
 
 
     drawScene(time: number){
+        time *= 0.05;
         let gl = this.gl;
+
+
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        //
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // Turn on culling. By default backfacing triangles
+        // will be culled.
+        gl.enable(gl.CULL_FACE);
+
+        // Enable the depth buffer
+        gl.enable(gl.DEPTH_TEST);
 
         this.drawObjects.forEach(object => {
             let program = object.programInfo;
-            let attr = object.attributes;
-            let bufferInfo = object.bufferInfo;
+
+            let attr = object.positionAttr;
+            let colorAtt = object.colorAttr;
+
+            let posBuffer = object.bufferInfo;
+            let colorBuffer = object.colorInfo;
+
             let uniform = object.uniformInfo;
+            let trans = object.translation;
+
+            let counts = object.numCount;
+
+
+
+
 
             gl.useProgram(program);
 
+
+
+
+            gl.enableVertexAttribArray(attr);
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
             gl.vertexAttribPointer(
                 attr, 3, gl.FLOAT, false, 0, 0
             );
 
-            gl.enableVertexAttribArray(attr);
-            gl.bindBuffer(gl.ARRAY_BUFFER, bufferInfo);
 
-            let matrix = this.doMatrix(uniform, gl, [0, 0, 0], [0, 0, 0], [1, 1, 1]);
+            gl.enableVertexAttribArray(colorAtt);
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.vertexAttribPointer(
+                colorAtt, 3, gl.UNSIGNED_BYTE, true, 0, 0
+            );
+
+            let matrix = this.doMatrix(uniform, gl, trans, [time, time,45], [1, 1, 1]);
             gl.uniformMatrix4fv(this.gl.getUniformLocation(program, 'u_matrix'), false, matrix);
 
-            gl.drawArrays(gl.TRIANGLES, 0, 18);
+            gl.drawArrays(gl.TRIANGLES, 0, counts);
 
         })
     }
@@ -72,18 +105,32 @@ export default class Canvas extends CanvasHelpers {
 
     setupDrawObjects(gl: WebGLRenderingContext){
         let success = true;
-        this.loadedObjects.objects.forEach( (item) => {
+
+        let allTranslation = [
+            [200, 300, 0],
+            [400, 300, 0],
+            [600, 300, 0],
+        ];
+
+
+        this.loadedObjects.objects.forEach( (item, index) => {
             let program = this.setupProgram(gl);
 
             if (program === undefined)return;
 
-            let attributes = this.setupAttr(gl, program);
+            let posAtt = this.setupAttr(gl, program);
+            let colorAtt = this.setupColor(gl, program);
+
             let buffer = this.setupBuffer(gl, new Float32Array(item.points));
-            // console.log(item.points);
+            let colorBuffer = this.setupBuffer(gl, new Uint8Array(item.color));
+
+            let translation = allTranslation[index];
             let uniform = this.setupUniform();
 
-            if (buffer !== null){
-                this.drawObjects.push(new ObjectTemplate(program, attributes, buffer, uniform));
+            let count = item.points.length/3;
+
+            if (buffer !== null && colorBuffer !== null){
+                this.drawObjects.push(new ObjectTemplate(program, posAtt, colorAtt, buffer, colorBuffer, uniform, translation, count));
             } else {
                 success = false;
                 console.error("Setup problems");
@@ -108,6 +155,10 @@ export default class Canvas extends CanvasHelpers {
 
     setupAttr(gl: WebGLRenderingContext, p: WebGLProgram){
         return gl.getAttribLocation(p, 'a_position');
+    }
+
+    setupColor(gl: WebGLRenderingContext, p: WebGLProgram){
+        return gl.getAttribLocation(p, 'a_color');
     }
 
     setupProgram(gl: WebGLRenderingContext){

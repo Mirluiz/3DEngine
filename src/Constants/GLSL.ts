@@ -2,26 +2,26 @@ export default class GLSL {
     //vertex shaders
     static vertCode: string = `// an attribute will receive data from a buffer
                                     attribute vec4 a_position;
-                                    // attribute vec4 a_color;
+                                    attribute vec4 a_color;
                                 
                                     uniform mat4 u_matrix;
-                                    // varying vec4 v_color;
+                                    varying vec4 v_color;
                                     
                                     void main() {
                                       // Умножаем координату на матрицу
                                       gl_Position = u_matrix * a_position;
-                                      // v_color = a_color;
+                                      v_color = a_color;
                                     }`;
 
     //fragment shaders
     static fragCode: string =  `
                                 precision mediump float;
-                            
-                                // Передаётся из вершинного шейдера
+                                
+                                // Passed in from the vertex shader.
                                 varying vec4 v_color;
                                 
                                 void main() {
-                                  gl_FragColor = v_color;
+                                   gl_FragColor = v_color;
                                 }
                                   `;
 
@@ -50,7 +50,7 @@ export default class GLSL {
 
 
     public static getFrag(){
-        return  this.testFragCode;
+        return  this.fragCode;
     }
 
     public static getVert(){

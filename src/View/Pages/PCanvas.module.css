@@ -1,0 +1,26 @@
+.container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.rangeInp {
+    position: absolute;
+    right: 0px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-content: center;
+}
+
+.rangeInp > div {
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.canvas {
+    outline: 1px solid black;
+}
